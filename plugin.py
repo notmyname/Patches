@@ -34,6 +34,10 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 
+'''
+Tool to generate gerrit review URLs
+'''
+
 
 class Patches(callbacks.Plugin):
     """Add the help for "@plugin help Patches" here
@@ -45,10 +49,17 @@ class Patches(callbacks.Plugin):
         self.__parent.__init__(irc)
 
     def testpatch(self, irc, msg, args):
+        '''
+        Tests that the plugin is working.
+        '''
         irc.reply('testpatch command response')
     testpatch = wrap(testpatch)
 
     def _p(self, irc, msg, args, patch_number):
+        '''<patch number>
+
+        Generates a review.openstack.org URL to <patch number>.
+        '''
         irc.reply('https://review.openstack.org/#/c/%d/' % patch_number)
     p = wrap(_p, ['int'])
     patch = wrap(_p, ['int'])
