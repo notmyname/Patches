@@ -34,14 +34,18 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 
+import re
+
 '''
 Tool to generate gerrit review URLs
 '''
 
 
 class Patches(callbacks.Plugin):
-    """Add the help for "@plugin help Patches" here
-    This should describe *how* to use this plugin."""
+    """Patches is a bot that takes a patch number and makes a URL
+    in the OpenStack gerrit review system.
+    Patches accepts patches at https://github.com/notmyname/Patches/
+    """
     threaded = True
 
     def __init__(self, irc):
@@ -63,6 +67,19 @@ class Patches(callbacks.Plugin):
         irc.reply('https://review.openstack.org/#/c/%d/' % patch_number)
     p = wrap(_p, ['int'])
     patch = wrap(_p, ['int'])
+
+    def _foo(self, irc, msg, args, rest_of_message):
+        '''
+        '''
+        response = 'msg: %r; args: %r; rest: %r' % (msg, args, rest_of_message)
+        irc.reply(response)
+    foo = wrap(_foo, [many('anything')])
+
+    def doPrivmsg(self, irc, msg):
+        channel = msg.args[0]
+        match = re.match('.*?patch\s(\d+).*?', msg.args[1])
+        if match:
+            self._p(irc, msg, None, int(match.group(1)))
 
 Class = Patches
 
