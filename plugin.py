@@ -43,9 +43,6 @@ Tool to generate gerrit review URLs
 patch_re = r'.*?(?:patch\s+){1}(\d+).*?'
 patch_regex = re.compile(patch_re)
 
-patch_re2 = r'Console logs not available after .*? (\d+),\d+,.*?'
-patch_regex2 = re.compile(patch_re2)
-
 
 class Patches(callbacks.Plugin):
     """Patches is a bot that takes a patch number and makes a URL
@@ -85,9 +82,6 @@ class Patches(callbacks.Plugin):
         channel = msg.args[0]
         match = patch_regex.findall(msg.args[1])
         for thing in match:
-            self._p(irc, msg, None, int(thing))
-        match2 = patch_regex2.findall(msg.args[1])
-        for thing in match2:
             self._p(irc, msg, None, int(thing))
 
 Class = Patches
