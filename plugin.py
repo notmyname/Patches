@@ -34,7 +34,9 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 
+import json
 import re
+import requests
 
 '''
 Tool to generate gerrit review URLs
@@ -43,6 +45,7 @@ Tool to generate gerrit review URLs
 patch_re = r'.*?(?:patch\s+){1}(\d+).*?'
 patch_regex = re.compile(patch_re)
 
+REVIEW_SERVER = 'https://review.openstack.org'
 
 class Patches(callbacks.Plugin):
     """Patches is a bot that takes a patch number and makes a URL
@@ -67,7 +70,14 @@ class Patches(callbacks.Plugin):
 
         Generates a review.openstack.org URL to <patch number>.
         '''
-        irc.reply('https://review.openstack.org/#/c/%d/' % patch_number)
+        subject = self._get_subject(patch_number)
+        if len(subject) > 53:
+            subject = subject[:50] + '...'
+        if subject:
+            irc.reply('%s/#/c/%d/ - %s' % (
+                REVIEW_SERVER, patch_number, subject))
+        else:
+            irc.reply('%s/#/c/%d/' % (REVIEW_SERVER, patch_number))
     p = wrap(_p, ['int'])
     patch = wrap(_p, ['int'])
 
@@ -83,6 +93,25 @@ class Patches(callbacks.Plugin):
         match = patch_regex.findall(msg.args[1])
         for thing in match:
             self._p(irc, msg, None, int(thing))
+
+    def _get_subject(self, patch_number):
+        resp = requests.get('%s/changes/%d' % (REVIEW_SERVER, patch_number),
+                            headers={'Accept': 'application/json'},
+                            stream=True)
+        if resp.status_code != 200:
+            return None  # Error; patch does not exist?
+
+        if int(resp.headers.get('Content-Length', '1024')) >= 1024:
+            return None  # Response too long; all of these should be real small
+
+        lines = resp.iter_lines()
+        next(lines)  # Throw out )]}' line
+        try:
+            data = json.loads(b''.join(lines))
+            return data['subject']
+        except (ValueError, TypeError, KeyError):
+            # Bad JSON, JSON not a hash, or hash doesn't have "subject"
+            return None
 
 Class = Patches
 
