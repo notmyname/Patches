@@ -42,7 +42,7 @@ import requests
 Tool to generate gerrit review URLs
 '''
 
-patch_re = r'.*?(?:patch\s+){1}(\d+).*?'
+patch_re = r'.*?(?:patch\s+){1}#?(\d+).*?'
 patch_regex = re.compile(patch_re)
 
 REVIEW_SERVER = 'https://review.openstack.org'
