@@ -70,18 +70,32 @@ class Patches(callbacks.Plugin):
 
         Generates a review.openstack.org URL to <patch number>.
         '''
-        subject, status = self._get_subject_and_status(patch_number)
-        if subject and len(subject) > 53:
-            subject = subject[:50] + '...'
+        data = self._get_data(patch_number) or {}
+        pieces = ['%s/#/c/%d/' % (REVIEW_SERVER, patch_number)]
 
-        if subject and status != 'NEW':
-            irc.reply('%s/#/c/%d/ - %s (%s)' % (
-                REVIEW_SERVER, patch_number, subject, status))
-        elif subject:
-            irc.reply('%s/#/c/%d/ - %s' % (
-                REVIEW_SERVER, patch_number, subject))
-        else:
-            irc.reply('%s/#/c/%d/' % (REVIEW_SERVER, patch_number))
+        project = data.get('project')
+        if project:
+            if project.startswith('openstack/'):
+                project = project[10:]
+            branch = data.get('branch', 'master')
+
+            if branch == 'master':
+                pieces.append(project)
+            else:
+                pieces.append('%s (%s)' % (project, branch))
+
+        subject = data.get('subject')
+        if subject:
+            if len(subject) > 53:
+                subject = subject[:50] + '...'
+            status = data.get('status', 'NEW')
+
+            if status == 'NEW':
+                pieces.append(subject)
+            else:
+                pieces.append('%s (%s)' % (subject, status))
+
+        irc.reply(' - '.join(pieces))
     p = wrap(_p, ['int'])
     patch = wrap(_p, ['int'])
 
@@ -98,24 +112,24 @@ class Patches(callbacks.Plugin):
         for thing in match:
             self._p(irc, msg, None, int(thing))
 
-    def _get_subject_and_status(self, patch_number):
+    def _get_data(self, patch_number):
         resp = requests.get('%s/changes/%d' % (REVIEW_SERVER, patch_number),
                             headers={'Accept': 'application/json'},
                             stream=True)
         if resp.status_code != 200:
-            return None, None  # Error; patch does not exist?
+            return None  # Error; patch does not exist?
 
         if int(resp.headers.get('Content-Length', '1024')) >= 1024:
-            return None, None  # Response too long; this should be real small
+            return None  # Response too long; this should be real small
 
         lines = resp.iter_lines()
         next(lines)  # Throw out )]}' line
         try:
             data = json.loads(b''.join(lines))
-            return data['subject'], data.get('status', 'NEW')
+            return data
         except (ValueError, TypeError, KeyError):
             # Bad JSON, JSON not a hash, or hash doesn't have "subject"
-            return None, None
+            return None
 
 Class = Patches
 
