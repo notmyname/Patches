@@ -44,6 +44,8 @@ Tool to generate gerrit review URLs
 
 patch_re = r'.*?(?:patch\s+){1}#?(\d+).*?'
 patch_regex = re.compile(patch_re)
+full_url_re = r'https://review.openstack.org/#/c/(\d+)/'
+url_regex = re.compile(full_url_re)
 
 REVIEW_SERVER = 'https://review.openstack.org'
 
@@ -109,6 +111,9 @@ class Patches(callbacks.Plugin):
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
         match = patch_regex.findall(msg.args[1])
+        for thing in match:
+            self._p(irc, msg, None, int(thing))
+        match = url_regex.findall(msg.args[1])
         for thing in match:
             self._p(irc, msg, None, int(thing))
 
