@@ -67,13 +67,17 @@ class Patches(callbacks.Plugin):
         irc.reply('testpatch command response')
     testpatch = wrap(testpatch)
 
-    def _p(self, irc, msg, args, patch_number):
+    def _p(self, irc, msg, args, patch_number, already_linked=False):
         '''<patch number>
 
         Generates a review.openstack.org URL to <patch number>.
         '''
         data = self._get_data(patch_number) or {}
-        pieces = ['%s/#/c/%d/' % (REVIEW_SERVER, patch_number)]
+        pieces = []
+        if already_linked:
+            pieces.append('patch %d' % patch_number)
+        else:
+            pieces.append('%s/#/c/%d/' % (REVIEW_SERVER, patch_number))
 
         project = data.get('project')
         if project:
@@ -112,10 +116,10 @@ class Patches(callbacks.Plugin):
         channel = msg.args[0]
         match = patch_regex.findall(msg.args[1])
         for thing in match:
-            self._p(irc, msg, None, int(thing))
+            self._p(irc, msg, None, int(thing), already_linked=False)
         match = url_regex.findall(msg.args[1])
         for thing in match:
-            self._p(irc, msg, None, int(thing))
+            self._p(irc, msg, None, int(thing), already_linked=True)
 
     def _get_data(self, patch_number):
         resp = requests.get('%s/changes/%d' % (REVIEW_SERVER, patch_number),
