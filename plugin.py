@@ -48,6 +48,11 @@ full_url_re = r'https://review.openstack.org/#/c/(\d+)/'
 url_regex = re.compile(full_url_re)
 
 REVIEW_SERVER = 'https://review.openstack.org'
+KNOWN_BOTS = set([
+    'openstack',
+    'openstackgerrit',
+    'openstackstatus',
+])
 
 class Patches(callbacks.Plugin):
     """Patches is a bot that takes a patch number and makes a URL
@@ -72,6 +77,10 @@ class Patches(callbacks.Plugin):
 
         Generates a review.openstack.org URL to <patch number>.
         '''
+        nick = msg.prefix.split('!', 1)[0]
+        if nick in KNOWN_BOTS:
+            return
+
         data = self._get_data(patch_number) or {}
         pieces = []
         if already_linked:
