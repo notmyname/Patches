@@ -1,1 +1,1 @@
-Insert a description of your plugin here, with any notes, etc. about using it.
+A supybot plugin that makes references to openstack patches clicky links.
