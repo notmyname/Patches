@@ -81,7 +81,7 @@ class Patches(callbacks.Plugin):
         if nick in KNOWN_BOTS:
             return
 
-        if patch < 20:
+        if patch_number < 20:
             # ignore low patch numbers; they were probably being used as
             # placeholders
             return
