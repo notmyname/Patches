@@ -81,6 +81,11 @@ class Patches(callbacks.Plugin):
         if nick in KNOWN_BOTS:
             return
 
+        if patch < 20:
+            # ignore low patch numbers; they were probably being used as
+            # placeholders
+            return
+
         data = self._get_data(patch_number) or {}
         pieces = []
         if already_linked:
