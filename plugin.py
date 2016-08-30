@@ -42,9 +42,9 @@ import requests
 Tool to generate gerrit review URLs
 '''
 
-patch_re = r'.*?(?:patch\s+){1}#?(\d+).*?'
+patch_re = r'.*?(?:p(?:atch)?\s+){1}#?(\d+).*?'
 patch_regex = re.compile(patch_re)
-full_url_re = r'https://review.openstack.org/#/c/(\d+)/?'
+full_url_re = r'https://review.openstack.org(?:/#/c)?/(\d+)/?'
 url_regex = re.compile(full_url_re)
 
 REVIEW_SERVER = 'https://review.openstack.org'
@@ -114,10 +114,9 @@ class Patches(callbacks.Plugin):
                 pieces.append(subject)
             else:
                 pieces.append('%s (%s)' % (subject, status))
-
         irc.reply(' - '.join(pieces))
-    p = wrap(_p, ['int'])
-    patch = wrap(_p, ['int'])
+    # p = wrap(_p, ['int'])
+    # patch = wrap(_p, ['int'])
 
     def _foo(self, irc, msg, args, rest_of_message):
         '''
